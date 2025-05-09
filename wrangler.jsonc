@@ -10,8 +10,13 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"migrations": [
 		{
-			"new_sqlite_classes": ["PostgresMcpAgent"],
-			"tag": "v1"
+			"tag": "v1-rename-mcp-to-postgres",
+			"renamed_classes": [
+				{
+					"from": "MyMCP",
+					"to": "PostgresMcpAgent"
+				}
+			]
 		}
 	],
 	"durable_objects": {

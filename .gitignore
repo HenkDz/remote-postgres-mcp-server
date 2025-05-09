@@ -177,3 +177,4 @@ dist
 .dev.vars
 .wrangler/
 CLOUDFLARE_MCP_SERVER_DEVELOPMENT_GUIDE.md
+.cursor/mcp.json
