@@ -11,16 +11,18 @@
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20240405.0",
+		"@types/pg": "^8.11.5",
 		"marked": "^15.0.11",
-		"typescript": "^5.8.3",
+		"typescript": "^5.4.5",
 		"workers-mcp": "^0.1.0-3",
 		"wrangler": "^4.14.4"
 	},
 	"dependencies": {
 		"@cloudflare/workers-oauth-provider": "^0.0.5",
-		"@modelcontextprotocol/sdk": "^1.11.1",
-		"agents": "^0.0.80",
-		"hono": "^4.7.9",
-		"zod": "^3.24.4"
+		"agents": "^0.0.82",
+		"hono": "^4.2.9",
+		"pg": "^8.11.5",
+		"zod": "^3.23.8"
 	}
 }
