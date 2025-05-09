@@ -1,6 +1,8 @@
 import { McpAgent } from 'agents/mcp';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { analyzeDatabaseLogic, AnalyzeDatabaseInputSchema } from './tools/analyze';
+import type { AnalysisResult } from './tools/analyze';
 
 // Define the structure of your Durable Object's state
 export interface PostgresMcpAgentState {
@@ -38,8 +40,8 @@ export class PostgresMcpAgent extends McpAgent<Env, PostgresMcpAgentState, Recor
       return;
     }
 
-    this.registerConfigurePostgresTool(); // Register the new tool
-    // this.registerAnalyzeDatabaseTool(); 
+    this.registerConfigurePostgresTool();
+    this.registerAnalyzeDatabaseTool();
 
     console.log("PostgresMcpAgent tools registered.");
   }
@@ -71,8 +73,56 @@ export class PostgresMcpAgent extends McpAgent<Env, PostgresMcpAgentState, Recor
     );
   }
 
-  // Placeholder for analyzeDatabaseTool (to be implemented by copying and adapting)
-  // private registerAnalyzeDatabaseTool() {
-  //   // ...
-  // }
+  private registerAnalyzeDatabaseTool() {
+    if (!this.server) return;
+
+    this.server.tool(
+      "pg_analyze_database",
+      "Analyzes PostgreSQL database configuration, performance, and security. Reports on version, settings, metrics, and provides recommendations.",
+      AnalyzeDatabaseInputSchema.shape,
+      async (input: z.infer<typeof AnalyzeDatabaseInputSchema>) => {
+        if (!this.state.isConfigured || !this.state.dbConnectionString) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "Error: PostgreSQL connection is not configured. Please call 'configure_postgres_connection' first with a valid connection string.",
+              },
+            ],
+            _meta: { isError: true },
+          };
+        }
+
+        try {
+          const result: AnalysisResult = await analyzeDatabaseLogic(
+            this.state.dbConnectionString,
+            input.analysisType
+          );
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(result, null, 2),
+              },
+              {
+                type: "text",
+                text: `Database Analysis Result:\nVersion: ${result.version}\nSettings Sample: ${Object.entries(result.settings).slice(0,2).map(([k,v]) => `${k}: ${v}`).join(', ')}...\nMetrics Sample: Connections: ${result.metrics.connections}, Active Queries: ${result.metrics.activeQueries}, Cache Hit: ${(result.metrics.cacheHitRatio * 100).toFixed(2)}%\nRecommendations:\n- ${result.recommendations.join('\n- ')}`
+              }
+            ],
+          };
+        } catch (e: any) {
+          console.error("[pg_analyze_database tool] Error:", e);
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error during database analysis: ${e.message}`,
+              },
+            ],
+            _meta: { isError: true },
+          };
+        }
+      }
+    );
+  }
 } 
